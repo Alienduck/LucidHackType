@@ -10,4 +10,5 @@ repository = "https://github.com/Alienduck/LucidHackType"
 
 [dependencies]
 clap = { version = "4.6.6", features = ["derive"] }
+enigo = "0.6.1"
 rdev = { version = "0.5.3", features = ["unstable_grab"] }
