@@ -275,3 +275,45 @@ fn main() {
 
     rdev::grab(callback).unwrap();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn test_sleep_ms() {
+        use super::sleep_ms;
+
+        let instant = Instant::now();
+        sleep_ms(12);
+        let time_between = instant.elapsed();
+        assert!(time_between.ge(&Duration::from_millis(12)));
+    }
+
+    #[test]
+    fn test_strip_auto_close_delimiter() {
+        use super::strip_autoclosed_delimiter;
+        use rdev::{Event, listen};
+
+        let instant = Instant::now();
+        let delete_pressed = Arc::new(AtomicBool::new(false));
+        let delete_pressed_clone = delete_pressed.clone();
+        let enigo = Arc::new(Mutex::new(Enigo::new(&Settings::default()).unwrap()));
+        std::thread::spawn(move || {
+            listen(move |event: Event| match event.event_type {
+                EventType::KeyPress(key) => match key {
+                    rdev::Key::Delete => delete_pressed_clone.store(true, Ordering::Relaxed),
+                    _ => {}
+                },
+                _ => {}
+            })
+            .unwrap();
+        });
+        std::thread::sleep(Duration::from_millis(50));
+        strip_autoclosed_delimiter(&enigo, 12);
+        let elapsed = instant.elapsed();
+        assert!(elapsed >= Duration::from_millis(12));
+        assert!(delete_pressed.load(Ordering::Relaxed));
+    }
+}
